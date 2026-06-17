@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Hub</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: system-ui;
+  background: #0b0f1a;
+  color: white;
+  text-align: center;
+}
+
+h1 {
+  margin: 20px;
+}
+
+.menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  padding: 20px;
+}
+
+button {
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
+  background: #1f6fff;
+  color: white;
+  font-size: 16px;
+}
+
+button:hover {
+  background: #3a86ff;
+}
+
+.game {
+  display: none;
+  padding: 20px;
+}
+
+canvas {
+  background: #111;
+  border: 2px solid white;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎮 Game Hub</h1>
+
+<div class="menu">
+  <button onclick="openGame('snake')">Snake</button>
+  <button onclick="openGame('click')">Click Game</button>
+  <button onclick="openGame('pong')">Pong</button>
+</div>
+
+<!-- SNAKE -->
+<div id="snake" class="game">
+  <h2>Snake</h2>
+  <canvas id="snakeCanvas" width="300" height="300"></canvas>
+</div>
+
+<!-- CLICK GAME -->
+<div id="click" class="game">
+  <h2>Click Game</h2>
+  <p>Clicks: <span id="score">0</span></p>
+  <button onclick="addClick()">CLICK ME</button>
+</div>
+
+<!-- PONG -->
+<div id="pong" class="game">
+  <h2>Pong</h2>
+  <canvas id="pongCanvas" width="300" height="300"></canvas>
+</div>
+
+<script>
+function openGame(id){
+  document.querySelectorAll('.game').forEach(g => g.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+}
+
+/* CLICK GAME */
+let score = 0;
+function addClick(){
+  score++;
+  document.getElementById("score").innerText = score;
+}
+
+/* SNAKE (simple version) */
+const s = document.getElementById("snakeCanvas");
+const ctx = s.getContext("2d");
+
+let snake = [{x:150,y:150}];
+let dx = 10, dy = 0;
+
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowUp") {dx=0;dy=-10;}
+  if(e.key==="ArrowDown") {dx=0;dy=10;}
+  if(e.key==="ArrowLeft") {dx=-10;dy=0;}
+  if(e.key==="ArrowRight") {dx=10;dy=0;}
+});
+
+function drawSnake(){
+  let head = {x:snake[0].x+dx, y:snake[0].y+dy};
+  snake.unshift(head);
+  snake.pop();
+
+  ctx.fillStyle="black";
+  ctx.fillRect(0,0,300,300);
+
+  ctx.fillStyle="lime";
+  snake.forEach(part=>{
+    ctx.fillRect(part.x,part.y,10,10);
+  });
+}
+
+setInterval(drawSnake,100);
+
+/* PONG (basic AI) */
+const p = document.getElementById("pongCanvas");
+const ptx = p.getContext("2d");
+
+let ball = {x:150,y:150,dx:3,dy:2};
+let paddle = {y:120};
+
+document.addEventListener("mousemove", e=>{
+  paddle.y = e.clientY - p.getBoundingClientRect().top;
+});
+
+function pong(){
+  ptx.fillStyle="black";
+  ptx.fillRect(0,0,300,300);
+
+  ball.x += ball.dx;
+  ball.y += ball.dy;
+
+  if(ball.y<0||ball.y>300) ball.dy*=-1;
+  if(ball.x<0||ball.x>300) ball.dx*=-1;
+
+  // paddle
+  ptx.fillStyle="white";
+  ptx.fillRect(10,paddle.y,10,60);
+
+  // ball
+  ptx.fillStyle="red";
+  ptx.fillRect(ball.x,ball.y,10,10);
+}
+
+setInterval(pong,20);
+</script>
+
+</body>
+</html>
