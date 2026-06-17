@@ -1,235 +1,172 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>INSANE PRO GAME HUB</title>
+<title>Pro Game Hub</title>
 
 <style>
 body{
   margin:0;
   font-family:system-ui;
-  background:#070a12;
+  background:#0b0f1a;
   color:white;
-  text-align:center;
 }
 
-h1{margin:10px;}
+.top{
+  padding:10px;
+  background:#11172a;
+  text-align:center;
+  font-weight:bold;
+}
 
-.menu{
+.grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
   gap:10px;
   padding:10px;
 }
 
-button{
+.card{
+  background:#151c33;
   padding:12px;
-  border:none;
   border-radius:10px;
-  background:#1f6fff;
-  color:white;
-  font-weight:bold;
+  cursor:pointer;
 }
-
-button:hover{background:#3a86ff;}
+.card:hover{background:#1c2550;}
 
 .screen{display:none;padding:10px;}
 
 canvas{
-  background:#111;
+  background:#000;
   border:2px solid white;
 }
-
-.small{font-size:12px;color:#aaa;}
 </style>
 </head>
 
 <body>
 
-<h1>🔥 INSANE PRO GAME HUB</h1>
-<div class="small">Fully custom arcade system</div>
+<div class="top">🎮 PRO ARCADE HUB</div>
 
-<div class="menu">
-  <button onclick="openGame('home')">🏠 Menu</button>
-  <button onclick="openGame('runner')">🏃 Runner</button>
-  <button onclick="openGame('ball')">⚽ Ball Battle</button>
-  <button onclick="openGame('shop')">🛒 Shop</button>
+<div id="home" class="grid">
+
+  <div class="card" onclick="openGame('dash')">🏃 Rhythm Dash</div>
+  <div class="card" onclick="openGame('love')">💖 Love Test</div>
+  <div class="card" onclick="openGame('mart')">🛒 Mini Mart</div>
+  <div class="card" onclick="openGame('car')">🚗 Car Arcade (20 Modes)</div>
+
 </div>
 
-<!-- HOME -->
-<div id="home" class="screen" style="display:block">
-  <h2>Welcome</h2>
-  <p>Coins: <span id="coins">0</span></p>
-  <p>Level: <span id="level">1</span></p>
+<!-- DASH -->
+<div id="dash" class="screen">
+<h3>🏃 Rhythm Dash</h3>
+<canvas id="dashC" width="320" height="160"></canvas>
 </div>
 
-<!-- RUNNER -->
-<div id="runner" class="screen">
-  <h2>🏃 Level Runner</h2>
-  <canvas id="rCanvas" width="320" height="160"></canvas>
-  <p class="small">Space = jump</p>
+<!-- LOVE -->
+<div id="love" class="screen">
+<h3>💖 Love Test</h3>
+<input id="a" placeholder="Name 1">
+<input id="b" placeholder="Name 2">
+<button onclick="love()">Test</button>
+<h2 id="res"></h2>
 </div>
 
-<!-- BALL -->
-<div id="ball" class="screen">
-  <h2>⚽ Ball Battle</h2>
-  <canvas id="bCanvas" width="320" height="200"></canvas>
+<!-- MART -->
+<div id="mart" class="screen">
+<h3>🛒 Mini Mart</h3>
+<p>Coins: <span id="coins">0</span></p>
+<button onclick="buy()">Buy (+1/sec)</button>
 </div>
 
-<!-- SHOP -->
-<div id="shop" class="screen">
-  <h2>🛒 Shop</h2>
-  <button onclick="buySpeed()">Buy Speed (20)</button>
-  <button onclick="buyLevel()">Unlock Level (50)</button>
+<!-- CAR ARCADE -->
+<div id="car" class="screen">
+<h3>🚗 Car Arcade</h3>
+<p>Mode: <span id="mode">City Drift</span></p>
+<button onclick="nextMode()">Next Mode</button>
+<canvas id="carC" width="320" height="160"></canvas>
 </div>
 
 <script>
 
-/* ---------------- SYSTEM ---------------- */
-let coins = 0;
-let level = 1;
-let speedBoost = 1;
-
-function save(){
-  localStorage.setItem("proHub", JSON.stringify({coins,level,speedBoost}));
-}
-function load(){
-  let d = JSON.parse(localStorage.getItem("proHub"));
-  if(d){
-    coins=d.coins;
-    level=d.level;
-    speedBoost=d.speedBoost;
-  }
-}
-load();
-
-function updateUI(){
-  document.getElementById("coins").innerText = coins;
-  document.getElementById("level").innerText = level;
-}
-updateUI();
-
-/* ---------------- NAV ---------------- */
+/* NAV */
 function openGame(id){
   document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
   document.getElementById(id).style.display="block";
 }
 
-/* ---------------- RUNNER (Dash style) ---------------- */
-const r = document.getElementById("rCanvas");
-const rx = r.getContext("2d");
+/* ---------------- LOVE ---------------- */
+function love(){
+  let score = Math.floor(Math.random()*101);
+  document.getElementById("res").innerText = score + "% match 💖";
+}
 
-let player = {x:30,y:120,vy:0};
-let gravity = 0.6;
-let obstacles = [{x:320}];
+/* ---------------- MART ---------------- */
+let coins=0,cps=0;
+function buy(){ if(coins>=10){coins-=10;cps++;} }
+setInterval(()=>{coins+=cps;document.getElementById("coins").innerText=coins;},1000);
+
+/* ---------------- DASH ---------------- */
+const d=document.getElementById("dashC");
+const dx=d.getContext("2d");
+let py=120,vy=0,obs=320;
 
 document.addEventListener("keydown",e=>{
-  if(e.code==="Space" && player.y===120){
-    player.vy = -11;
-  }
+  if(e.code==="Space"&&py===120) vy=-10;
 });
 
-function runner(){
-  rx.fillStyle="#000";
-  rx.fillRect(0,0,320,160);
+function dash(){
+  dx.fillStyle="#000";dx.fillRect(0,0,320,160);
 
-  player.vy += gravity;
-  player.y += player.vy;
+  vy+=0.6;py+=vy;
+  if(py>120){py=120;vy=0;}
 
-  if(player.y > 120){player.y=120;player.vy=0;}
+  obs-=3;if(obs<0)obs=320;
 
-  obstacles.forEach(o=>{
-    o.x -= (3 + speedBoost);
+  dx.fillStyle="red";dx.fillRect(obs,130,20,20);
+  dx.fillStyle="lime";dx.fillRect(30,py,20,20);
 
-    if(o.x < -20){
-      o.x = 320;
-      coins += 1;
-      save();
-      updateUI();
-    }
-
-    // collision
-    if(o.x < 50 && o.x > 20 && player.y > 100){
-      o.x = 320;
-      coins = Math.max(0, coins-2);
-      save();
-      updateUI();
-    }
-
-    rx.fillStyle="red";
-    rx.fillRect(o.x,130,20,20);
-  });
-
-  rx.fillStyle="lime";
-  rx.fillRect(player.x,player.y,20,20);
-
-  requestAnimationFrame(runner);
+  requestAnimationFrame(dash);
 }
-runner();
+dash();
 
-/* ---------------- BALL GAME ---------------- */
-const b = document.getElementById("bCanvas");
-const bx = b.getContext("2d");
+/* ---------------- CAR ARCADE (20 MODES IDEA SYSTEM) ---------------- */
+const modes = [
+"City Drift","Highway Dodge","Police Chase","Parking Pro","Ice Drift",
+"Drag Race","Stunt Jump","Time Trial","Tunnel Run","Night Drive",
+"Bus Drive","Taxi Run","Crash Survival","Lane Switch","Fuel Run",
+"Mountain Road","Reverse Parking","Speed Test","Offroad","Traffic Escape"
+];
 
-let ball = {x:160,y:100,dx:3,dy:2};
-let p1 = {y:100};
-let p2 = {y:100};
+let mIndex=0;
+let carX=160;
 
-document.addEventListener("mousemove",e=>{
-  let r=b.getBoundingClientRect();
-  p1.y = e.clientY - r.top;
-});
-
-function ballGame(){
-  bx.fillStyle="#000";
-  bx.fillRect(0,0,320,200);
-
-  ball.x += ball.dx;
-  ball.y += ball.dy;
-
-  if(ball.y < 0 || ball.y > 200) ball.dy *= -1;
-
-  // player hit
-  if(ball.x < 30 && ball.y > p1.y-20 && ball.y < p1.y+40){
-    ball.dx *= -1;
-  }
-
-  // AI
-  p2.y += (ball.y - p2.y)*0.05;
-
-  if(ball.x > 290 && ball.y > p2.y-20 && ball.y < p2.y+40){
-    ball.dx *= -1;
-  }
-
-  bx.fillStyle="white";
-  bx.fillRect(20,p1.y,10,40);
-  bx.fillRect(290,p2.y,10,40);
-
-  bx.fillStyle="yellow";
-  bx.fillRect(ball.x,ball.y,10,10);
-
-  requestAnimationFrame(ballGame);
-}
-ballGame();
-
-/* ---------------- SHOP ---------------- */
-function buySpeed(){
-  if(coins >= 20){
-    coins -= 20;
-    speedBoost += 1;
-    save();
-    updateUI();
-  }
+function nextMode(){
+  mIndex = (mIndex+1)%modes.length;
+  document.getElementById("mode").innerText = modes[mIndex];
 }
 
-function buyLevel(){
-  if(coins >= 50){
-    coins -= 50;
-    level += 1;
-    save();
-    updateUI();
-  }
+const c=document.getElementById("carC");
+const cx=c.getContext("2d");
+
+function carLoop(){
+  cx.fillStyle="#000";
+  cx.fillRect(0,0,320,160);
+
+  // road
+  cx.fillStyle="#333";
+  cx.fillRect(80,0,160,160);
+
+  // car
+  cx.fillStyle="red";
+  cx.fillRect(carX,120,20,30);
+
+  cx.fillStyle="white";
+  cx.fillText(modes[mIndex],10,20);
+
+  requestAnimationFrame(carLoop);
 }
+carLoop();
+
 </script>
 
 </body>
